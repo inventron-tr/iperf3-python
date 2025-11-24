@@ -180,6 +180,10 @@ class IPerf3(object):
         self.lib.iperf_get_test_reverse.argtypes = (c_void_p,)
         self.lib.iperf_set_test_reverse.restype = None
         self.lib.iperf_set_test_reverse.argtypes = (c_void_p, c_int,)
+        self.lib.iperf_get_test_bidirectional.restype = c_int
+        self.lib.iperf_get_test_bidirectional.argtypes = (c_void_p,)                     
+        self.lib.iperf_set_test_bidirectional.restype = None
+        self.lib.iperf_set_test_bidirectional.argtypes = (c_void_p, c_int,)                     
         self.lib.iperf_run_client.restype = c_int
         self.lib.iperf_run_client.argtypes = (c_void_p,)
         self.lib.iperf_run_server.restype = c_int
@@ -600,11 +604,39 @@ class Client(IPerf3):
     @reverse.setter
     def reverse(self, enabled):
         if enabled:
+            if self._bidirectional:
+                return
             self.lib.iperf_set_test_reverse(self._test, 1)
         else:
             self.lib.iperf_set_test_reverse(self._test, 0)
 
         self._reverse = enabled
+
+    @property
+    def bidirectional(self):
+        """Toggles bidirectional of test
+
+        :rtype: bool
+        """
+        enabled = self.lib.iperf_get_test_bidirectional(self._test)
+
+        if enabled:
+            self._bidirectional = True
+        else:
+            self._bidirectional = False
+
+        return self._bidirectional
+
+    @bidirectional.setter
+    def bidirectional(self, enabled):
+        if enabled:
+            if self._reverse:
+                return
+            self.lib.iperf_set_test_bidirectional(self._test, 1)
+        else:
+            self.lib.iperf_set_test_bidirectional(self._test, 0)
+
+        self._bidirectional = enabled    
 
     def run(self):
         """Run the current test client.
@@ -726,6 +758,7 @@ class TestResult(object):
     :param remote_port: Remote port number
 
     :param reverse: Test ran in reverse direction
+    :param bidirectional: Test ran as bidirectional
     :param protocol: 'TCP' or 'UDP'
     :param num_streams: Number of test streams
     :param blksize:
