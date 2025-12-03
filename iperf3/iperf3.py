@@ -245,6 +245,8 @@ class IPerf3(object):
     def defaults(self):
         """Set/reset iperf test defaults."""
         self.lib.iperf_defaults(self._test)
+        self._bidirectional = False
+        self._reverse = False
 
     @property
     def role(self):
